@@ -6,7 +6,10 @@ import (
 )
 
 var (
-	ErrWALWrite = "could not write to WAL file"
+	ErrWALWrite      = "could not write to WAL file"
+	ErrWALBatchWrite = "could not write Batch Data to WAL file"
+	ErrMTBatchWrite  = "could not write Batch Data to memtable file"
+	ErrSSTBatchWrite = "could not write Batch Data to sstable file"
 )
 
 type Filesys struct {
@@ -61,4 +64,38 @@ func (Fsys *Filesys) Read(key int64) (string, bool) {
 		}
 	}
 	return emptystring(), false
+}
+
+func (Fsys *Filesys) ReadKeyRange(startkey int64, endkey int64) {
+	Fsys.mutex_t.Lock()
+	defer Fsys.mutex_t.Unlock()
+	result := make(map[int64]string)
+	for key, val := range Fsys.memtable.data {
+		if key >= startkey && key <= endkey {
+			result[key] = val
+		}
+	}
+}
+
+func (Fsys *Filesys) BatchPut(batch []map[int64]string) {
+	Fsys.mutex_t.Lock()
+	defer Fsys.mutex_t.Unlock()
+	for i := 0; i < len(batch); i++ {
+		for keys, vals := range batch {
+			if wal := Fsys.aheadLog.Write(int64(keys), vals[int64(keys)]); wal != nil {
+				fmt.Println()
+			}
+			Fsys.memtable.Put(int64(keys), vals[int64(keys)])
+			if len(Fsys.memtable.data) > Fsys.maxmemsize {
+				memflush := Fsys.memtable.Flush()
+				sstable := Newsstable(fmt.Sprintf("sstable-%d", keys))
+				_ = sstable.Write(memflush)
+				Fsys.sstables = append(Fsys.sstables, sstable)
+			}
+		}
+	}
+}
+
+func (Fsys *Filesys) Delete(key int64) {
+	Fsys.memtable.Delete(key)
 }
