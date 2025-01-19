@@ -47,3 +47,18 @@ func (Fsys *Filesys) Put(key int64, value string) {
 		Fsys.sstables = append(Fsys.sstables, sstable_t)
 	}
 }
+
+func (Fsys *Filesys) Read(key int64) (string, bool) {
+	Fsys.mutex_t.RLock()
+	defer Fsys.mutex_t.RUnlock()
+	if val, exists := Fsys.memtable.Read(key); exists {
+		return val, true
+	}
+	for i := len(Fsys.sstables) - 1; i >= 0; i-- {
+		block, _ := Fsys.sstables[i].Get(key)
+		if val, exists := block[key]; exists {
+			return val, true
+		}
+	}
+	return emptystring(), false
+}
