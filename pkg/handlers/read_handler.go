@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/gorilla/mux"
 	"github.com/jim-nnamdi/Lkvs/pkg/model"
 )
 
@@ -22,11 +23,11 @@ func NewReadHandler(Fsys *model.Filesys) *readHandler {
 func (handler *readHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	var (
-		key             = r.FormValue("key")
+		vars            = mux.Vars(r)
 		DataUnavailable = "Associated Data for key could not be found on disk!"
 		DataAvailable   = "Data successfully read"
 	)
-	keyval, _ := strconv.ParseInt(key, 10, 64)
+	keyval, _ := strconv.ParseInt(vars["key"], 10, 64)
 	vals, ok := handler.Fsys.Read(int64(keyval))
 	if !ok {
 		fmt.Println("err", DataUnavailable)

@@ -27,7 +27,7 @@ func (server *GracefulShutdownServer) getRouter() *mux.Router {
 
 	router.SkipClean(true)
 	router.Handle("/put", server.PutHandler)
-	router.Handle("/read", server.ReadHandler)
+	router.Handle("/read/{key}", server.ReadHandler)
 	router.Handle("/readkeyrange", server.ReadKeyRangeHandler)
 	router.Handle("/batchput", server.BatchPutHandler)
 	router.Handle("/delete", server.DeleteHandler)

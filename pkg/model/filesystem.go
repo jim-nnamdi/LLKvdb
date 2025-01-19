@@ -115,6 +115,19 @@ func (Fsys *Filesys) BatchPut(batch []map[int64]string) {
 	}
 }
 
+func (Fsys *Filesys) Recover() {
+	wal, err := Fsys.aheadLog.Replay()
+	if err != nil {
+		fmt.Println(err)
+	}
+	for _, vals := range wal {
+		Fsys.memtable.Put(vals.key, vals.value)
+	}
+	if len(Fsys.memtable.data) > Fsys.maxmemsize {
+		Fsys.memtable.Flush()
+	}
+}
+
 func (Fsys *Filesys) Delete(key int64) {
 	Fsys.memtable.Delete(key)
 }
