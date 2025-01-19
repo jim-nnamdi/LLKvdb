@@ -18,16 +18,15 @@ type WAL struct {
 }
 
 func NewWAL(walLoc string) (*WAL, error) {
-	file, err := os.OpenFile(walLoc, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+	file, err := os.OpenFile(walLoc, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0777)
 	WriteAheadLogError(err)
-	defer file.Close()
 	return &WAL{file: file}, nil
 }
 
 func (wal *WAL) Write(key int64, value string) error {
 	memsize, err := wal.file.WriteString(fmt.Sprintf("%d:%s\n", key, value))
 	GenericWriteAheadLogError(err)
-	fmt.Printf("bytes written to WALog: '%d'\n", memsize)
+	fmt.Printf("\nbytes written to WALog: '%d'\n", memsize)
 	return err
 }
 

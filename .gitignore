@@ -2,4 +2,6 @@
 .DS_Store
 llkvdb
 wal.json
+wal.bin 
+wal.txt
 pkg/.DS_Store
