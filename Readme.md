@@ -94,6 +94,36 @@ ps aux | grep llkvdb
 # To run unit tests
 go test ./... -v
 ```
+
+## **Make Usage**  
+```bash
+# Ensure you're in the project directory already
+# compiles the project  
+make compile
+
+# starts the binary as a process
+make run
+
+# runs the unit tests
+make test
+
+# removes the binary and disk files
+make clean
+```
+
+## **Endpoints**
+```shell
+
+# You can access the endpoints via postman or insomnia too
+# remember how to change the port on the **Notes** section
+
+curl --location 'http://localhost:7009/put' \
+--form 'key="9"' \
+--form 'value="Samuel"'
+
+curl --location 'http://localhost:7009/read/1'
+```
+
 ## **Notes**  
 Inside ```pkg/command/start.go``` file you will see the port on line 22. Now since this would be a binary running on a local system. it's fair to assume that the provided port in the project might be used or is currently in used for another running process. this value can be changed to a free port and then after that rebuild the binary and run as normal.
 
