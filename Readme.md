@@ -114,7 +114,7 @@ make clean
 ## **Endpoints**
 ```shell
 
-# You can access the endpoints via postman or insomnia too
+# After running the binary, you can access the endpoints via postman or insomnia too
 # remember how to change the port on the **Notes** section
 
 curl --location 'http://localhost:7009/put' \

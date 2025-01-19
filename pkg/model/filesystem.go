@@ -65,6 +65,18 @@ func (Fsys *Filesys) Read(key int64) (string, bool) {
 			return val, true
 		}
 	}
+	extra, err := Fsys.memtable.Dump()
+	if err != nil {
+		fmt.Println(err)
+		return emptystring(), false
+	}
+
+	for _, kv := range extra {
+		if key == kv.Key {
+			return kv.Value, true
+		}
+	}
+
 	return emptystring(), false
 }
 
