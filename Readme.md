@@ -90,6 +90,9 @@ go build -o llkvdb ./cmd/kvs
 
 # See running Process
 ps aux | grep llkvdb
+
+# To run unit tests
+go test ./... -v
 ```
 ## **Notes**  
 Inside ```pkg/command/start.go``` file you will see the port on line 22. Now since this would be a binary running on a local system. it's fair to assume that the provided port in the project might be used or is currently in used for another running process. this value can be changed to a free port and then after that rebuild the binary and run as normal.
