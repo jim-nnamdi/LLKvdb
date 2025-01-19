@@ -7,7 +7,9 @@ LLKVdb is an acronym for low latency key value database. Filesystems are major c
 3. [Prerequisites](#Prerequisites)
 3. [Installation](#installation)  
 4. [Usage](#usage) 
-5. [Notes](#notes)
+5. [Make Usage](#make-usage)
+6. [Endpoints](#endpoints)
+7. [Notes](#notes)
 
 ## **Description**  
 **LLKvdb** is a network available key value store database that is built based on the design principles of _Log Structured Merge Trees_ which can be incorporated in any system to serve as a datastore. LLKvdb provides low latency during writes and reads operations on any system it is incorporated on. it also provides a fault tolerant system which helps to preserve data incase of unforseen circumstances or a system crash. LLKvdb pays attention to the ACID properties of database engineering to enhance data safety and durability, It also uses algorithms like Quicksort (efficient for sorting large datasets), Binary search and Log Merge trees for internal file operations.
