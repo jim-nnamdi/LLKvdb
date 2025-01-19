@@ -7,6 +7,7 @@ LLKVdb is an acronym for low latency key value database. Filesystems are major c
 3. [Prerequisites](#Prerequisites)
 3. [Installation](#installation)  
 4. [Usage](#usage) 
+5. [Notes](#notes)
 
 ## **Description**  
 **LLKvdb** is a network available key value store database that is built based on the design principles of _Log Structured Merge Trees_ which can be incorporated in any system to serve as a datastore. LLKvdb provides low latency during writes and reads operations on any system it is incorporated on. it also provides a fault tolerant system which helps to preserve data incase of unforseen circumstances or a system crash. LLKvdb pays attention to the ACID properties of database engineering to enhance data safety and durability, It also uses algorithms like Quicksort (efficient for sorting large datasets), Binary search and Log Merge trees for internal file operations.
@@ -89,3 +90,16 @@ go build -o llkvdb ./cmd/kvs
 
 # See running Process
 ps aux | grep llkvdb
+```
+## **Notes**  
+Inside ```pkg/command/start.go``` file you will see the port on line 22. Now since this would be a binary running on a local system. it's fair to assume that the provided port in the project might be used or is currently in used for another running process. this value can be changed to a free port and then after that rebuild the binary and run as normal.
+
+```bash
+go build -o llkvdb ./cmd/kvs
+
+# Run the binary
+./llkvdb start & 
+
+# See running Process
+ps aux | grep llkvdb
+```

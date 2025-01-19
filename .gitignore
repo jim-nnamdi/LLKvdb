@@ -2,3 +2,4 @@
 .DS_Store
 llkvdb
 wal.json
+pkg/.DS_Store

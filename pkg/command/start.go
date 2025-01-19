@@ -19,7 +19,7 @@ func StartCommand() *cli.Command {
 				EnvVars:     []string{"LISTEN_ADDR"},
 				Usage:       "the address that the server will listen for request on",
 				Destination: &startRunner.ListenAddr,
-				Value:       ":8080", // TODO: check that this is correct port to serve on
+				Value:       ":7009",
 			},
 		},
 		Action: startRunner.Run,
