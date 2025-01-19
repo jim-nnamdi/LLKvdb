@@ -48,3 +48,39 @@ func (mem *Memtable) Flush() []KeyValue {
 	mem.data = make(map[int64]string)
 	return sortedData
 }
+
+func (mem *Memtable) FlushTableBenchMarkTest() []KeyValue {
+	mem.mutex.Lock()
+	defer mem.mutex.Unlock()
+	keys := make([]int64, 0, len(mem.data))
+	for key := range mem.data {
+		keys = append(keys, key)
+	}
+	QuicksortAlgorithm(keys)
+	sorted := make([]KeyValue, 0, len(mem.data))
+	for _, key := range keys {
+		sorted = append(sorted, KeyValue{key: key, value: mem.data[key]})
+	}
+	mem.data = make(map[int64]string)
+	return sorted
+}
+
+func QuicksortAlgorithm(arr []int64) {
+	if len(arr) < 2 {
+		return
+	}
+	pivot := arr[0]
+	Left := []int64{}
+	Right := []int64{}
+	for _, v := range arr {
+		if v < pivot {
+			Left = append(Left, v)
+		}
+		if v > pivot {
+			Right = append(Right, v)
+		}
+	}
+	QuicksortAlgorithm(Left)
+	QuicksortAlgorithm(Right)
+	copy(arr, append(append(Left, pivot), Right...))
+}
