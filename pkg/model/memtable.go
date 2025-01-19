@@ -10,11 +10,6 @@ type Memtable struct {
 	mutex sync.RWMutex
 }
 
-type KeyValue struct {
-	key   int64
-	value string
-}
-
 func Newmemtable() *Memtable {
 	return &Memtable{data: make(map[int64]string)}
 }

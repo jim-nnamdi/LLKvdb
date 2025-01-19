@@ -1,6 +1,7 @@
 package model
 
 import (
+	"bufio"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -19,21 +20,45 @@ func Newsstable(diskfile string) *SSTable {
 	return &SSTable{diskfile: diskfile}
 }
 
-func (sstable *SSTable) Write(data map[int64]string) error {
+func (sstable *SSTable) Write(data []KeyValue) error {
 	fsk, err := os.Create(sstable.diskfile)
 	TableDiskError(err)
 	defer fsk.Close()
-	store := json.NewEncoder(fsk)
-	return store.Encode(data)
+	for _, kv := range data {
+		_, err := fsk.WriteString(fmt.Sprintf("%d:%s\n", kv.key, kv.value))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
-func (sstable *SSTable) Read() map[int64]string {
+func (sstable *SSTable) Load() ([]KeyValue, error) {
 	fsk, err := os.Open(sstable.diskfile)
 	TableDiskError(err)
-	var data map[int64]string
-	decode := json.NewDecoder(fsk)
-	decode.Decode(&data)
-	return data
+	defer fsk.Close()
+	var data []KeyValue
+	scanner := bufio.NewScanner(fsk)
+	for scanner.Scan() {
+		line := scanner.Text()
+		var key int64
+		var value string
+		fmt.Sscanf(line, "%d:%s", key, value)
+		data = append(data, KeyValue{key: key, value: value})
+	}
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+	return data, nil
+}
+
+func (sstable *SSTable) Get(key int64) (string, error) {
+	_, err := sstable.Load()
+	if err != nil {
+		fmt.Println(ErrInexistentKey)
+		return emptystring(), err
+	}
+	return emptystring(), nil
 }
 
 func (sstable *SSTable) ReadOne(key int64) (string, error) {
@@ -51,10 +76,4 @@ func (sstable *SSTable) ReadOne(key int64) (string, error) {
 	}
 	fmt.Println(ErrInexistentKey)
 	return ErrInexistentKey, errors.New(ErrInexistentKey)
-}
-
-func TableDiskError(err error) {
-	if err != nil {
-		fmt.Printf("err:'%s'\n", err)
-	}
 }
