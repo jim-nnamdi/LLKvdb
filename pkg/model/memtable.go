@@ -57,6 +57,7 @@ func (mem *Memtable) FlushTableBenchMarkTest() []KeyValue {
 		keys = append(keys, key)
 	}
 	QuicksortAlgorithm(keys)
+	// sort.Slice(keys, func(i, j int) bool { return keys[i] < keys[j] })
 	sorted := make([]KeyValue, 0, len(mem.data))
 	for _, key := range keys {
 		sorted = append(sorted, KeyValue{key: key, value: mem.data[key]})

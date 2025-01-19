@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"sort"
 	"sync"
 )
 
@@ -66,16 +67,33 @@ func (Fsys *Filesys) Read(key int64) (string, bool) {
 	return emptystring(), false
 }
 
-func (Fsys *Filesys) ReadKeyRange(startkey int64, endkey int64) (bool, error) {
+func (Fsys *Filesys) ReadKeyRange(startkey int64, endkey int64) ([]KeyValue, error) {
 	Fsys.mutex_t.Lock()
 	defer Fsys.mutex_t.Unlock()
-	result := make(map[int64]string)
+	var results []KeyValue
 	for key, val := range Fsys.memtable.data {
 		if key >= startkey && key <= endkey {
-			result[key] = val
+			results = append(results, KeyValue{key: key, value: val})
 		}
 	}
-	return true, nil
+
+	for _, sstable := range Fsys.sstables {
+		data, err := sstable.Load()
+		if err != nil {
+			fmt.Println(err)
+			return nil, err
+		}
+		for _, kv := range data {
+			if startkey >= kv.key && endkey <= kv.key {
+				results = append(results, kv)
+			}
+		}
+	}
+	sort.Slice(results, func(i, j int) bool {
+		return results[i].key < results[j].key
+	})
+
+	return results, nil
 }
 
 func (Fsys *Filesys) BatchPut(batch []map[int64]string) {

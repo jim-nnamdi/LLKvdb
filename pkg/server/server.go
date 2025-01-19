@@ -8,8 +8,12 @@ import (
 )
 
 type GracefulShutdownServer struct {
-	HTTPListenAddr string
-	HomeHandler    http.Handler
+	HTTPListenAddr      string
+	PutHandler          http.Handler
+	ReadHandler         http.Handler
+	ReadKeyRangeHandler http.Handler
+	BatchPutHandler     http.Handler
+	DeleteHandler       http.Handler
 
 	httpServer     *http.Server
 	WriteTimeout   time.Duration
@@ -22,6 +26,11 @@ func (server *GracefulShutdownServer) getRouter() *mux.Router {
 	router := mux.NewRouter()
 
 	router.SkipClean(true)
+	router.Handle("/put", server.PutHandler)
+	router.Handle("/read", server.ReadHandler)
+	router.Handle("/readkeyrange", server.ReadKeyRangeHandler)
+	router.Handle("/batchput", server.BatchPutHandler)
+	router.Handle("/delete", server.DeleteHandler)
 	return router
 }
 
