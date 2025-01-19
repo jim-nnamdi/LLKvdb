@@ -53,12 +53,30 @@ func (sstable *SSTable) Load() ([]KeyValue, error) {
 }
 
 func (sstable *SSTable) Get(key int64) (string, error) {
-	_, err := sstable.Load()
+	data, err := sstable.Load()
 	if err != nil {
 		fmt.Println(ErrInexistentKey)
 		return emptystring(), err
 	}
-
+	Left := 0
+	Right := len(data) - 1
+	if Left == Right {
+		result := data[key]
+		return result.value, nil
+	}
+	for Left < Right {
+		sMid := (Left + Right) / 2
+		if data[sMid].key == key {
+			result := data[data[sMid].key]
+			return result.value, nil
+		}
+		if data[sMid].key < key {
+			Left = sMid + 1
+		}
+		if data[sMid].key > key {
+			Right = sMid - 1
+		}
+	}
 	return emptystring(), nil
 }
 
