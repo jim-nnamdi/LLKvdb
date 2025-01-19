@@ -18,7 +18,7 @@ type WAL struct {
 }
 
 func NewWAL(walLoc string) (*WAL, error) {
-	file, err := os.OpenFile(walLoc, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0777)
+	file, err := os.OpenFile(walLoc, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 	WriteAheadLogError(err)
 	return &WAL{file: file}, nil
 }

@@ -44,6 +44,7 @@ func (Fsys *Filesys) Put(key int64, value string) {
 		fmt.Printf("%s\n", ErrWALWrite)
 	}
 	Fsys.memtable.Put(key, value)
+	Fsys.memtable.Dump()
 	if len(Fsys.memtable.data) > Fsys.maxmemsize {
 		memflush := Fsys.memtable.Flush()
 		sstable_t := Newsstable(fmt.Sprintf("sstable-%d", len(Fsys.sstables)))

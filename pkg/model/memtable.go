@@ -66,6 +66,21 @@ func (mem *Memtable) FlushTableBenchMarkTest() []KeyValue {
 	return sorted
 }
 
+func (mem *Memtable) Dump() ([]KeyValue, error) {
+	mem.mutex.RLock()
+	defer mem.mutex.RUnlock()
+	keys := make([]int64, len(mem.data))
+	for key := range mem.data {
+		keys = append(keys, key)
+	}
+	sort.Slice(keys, func(i, j int) bool { return keys[i] < keys[j] })
+	sorted := make([]KeyValue, 0, len(mem.data))
+	for _, sval := range keys {
+		sorted = append(sorted, KeyValue{key: sval, value: mem.data[sval]})
+	}
+	return sorted, nil
+}
+
 func QuicksortAlgorithm(arr []int64) {
 	if len(arr) < 2 {
 		return
