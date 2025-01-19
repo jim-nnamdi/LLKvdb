@@ -58,6 +58,7 @@ func (sstable *SSTable) Get(key int64) (string, error) {
 		fmt.Println(ErrInexistentKey)
 		return emptystring(), err
 	}
+
 	return emptystring(), nil
 }
 
