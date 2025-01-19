@@ -25,7 +25,7 @@ func (sstable *SSTable) Write(data []KeyValue) error {
 	TableDiskError(err)
 	defer fsk.Close()
 	for _, kv := range data {
-		_, err := fsk.WriteString(fmt.Sprintf("%d:%s\n", kv.key, kv.value))
+		_, err := fsk.WriteString(fmt.Sprintf("%d:%s\n", kv.Key, kv.Value))
 		if err != nil {
 			return err
 		}
@@ -44,7 +44,7 @@ func (sstable *SSTable) Load() ([]KeyValue, error) {
 		var key int64
 		var value string
 		fmt.Sscanf(line, "%d:%s", key, value)
-		data = append(data, KeyValue{key: key, value: value})
+		data = append(data, KeyValue{Key: key, Value: value})
 	}
 	if err := scanner.Err(); err != nil {
 		return nil, err
@@ -66,14 +66,14 @@ func (sstable *SSTable) Get(key int64) (map[int64]string, error) {
 	}
 	for Left < Right {
 		sMid := (Left + Right) / 2
-		if data[sMid].key == key {
-			sdata[key] = data[sMid].value
+		if data[sMid].Key == key {
+			sdata[key] = data[sMid].Value
 			return sdata, nil
 		}
-		if data[sMid].key < key {
+		if data[sMid].Key < key {
 			Left = sMid + 1
 		}
-		if data[sMid].key > key {
+		if data[sMid].Key > key {
 			Right = sMid - 1
 		}
 	}

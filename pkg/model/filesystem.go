@@ -74,7 +74,7 @@ func (Fsys *Filesys) ReadKeyRange(startkey int64, endkey int64) ([]KeyValue, err
 	var results []KeyValue
 	for key, val := range Fsys.memtable.data {
 		if key >= startkey && key <= endkey {
-			results = append(results, KeyValue{key: key, value: val})
+			results = append(results, KeyValue{Key: key, Value: val})
 		}
 	}
 
@@ -85,13 +85,13 @@ func (Fsys *Filesys) ReadKeyRange(startkey int64, endkey int64) ([]KeyValue, err
 			return nil, err
 		}
 		for _, kv := range data {
-			if startkey >= kv.key && endkey <= kv.key {
+			if startkey >= kv.Key && endkey <= kv.Key {
 				results = append(results, kv)
 			}
 		}
 	}
 	sort.Slice(results, func(i, j int) bool {
-		return results[i].key < results[j].key
+		return results[i].Key < results[j].Key
 	})
 
 	return results, nil
@@ -122,7 +122,7 @@ func (Fsys *Filesys) Recover() {
 		fmt.Println(err)
 	}
 	for _, vals := range wal {
-		Fsys.memtable.Put(vals.key, vals.value)
+		Fsys.memtable.Put(vals.Key, vals.Value)
 	}
 	if len(Fsys.memtable.data) > Fsys.maxmemsize {
 		Fsys.memtable.Flush()

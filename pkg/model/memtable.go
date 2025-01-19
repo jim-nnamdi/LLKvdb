@@ -43,7 +43,7 @@ func (mem *Memtable) Flush() []KeyValue {
 	sort.SliceStable(keys, func(i, j int) bool { return keys[i] < keys[j] })
 	sortedData := make([]KeyValue, 0, len(mem.data))
 	for _, key := range keys {
-		sortedData = append(sortedData, KeyValue{key: key, value: mem.data[key]})
+		sortedData = append(sortedData, KeyValue{Key: key, Value: mem.data[key]})
 	}
 	mem.data = make(map[int64]string)
 	return sortedData
@@ -60,7 +60,7 @@ func (mem *Memtable) FlushTableBenchMarkTest() []KeyValue {
 	// sort.Slice(keys, func(i, j int) bool { return keys[i] < keys[j] })
 	sorted := make([]KeyValue, 0, len(mem.data))
 	for _, key := range keys {
-		sorted = append(sorted, KeyValue{key: key, value: mem.data[key]})
+		sorted = append(sorted, KeyValue{Key: key, Value: mem.data[key]})
 	}
 	mem.data = make(map[int64]string)
 	return sorted
@@ -76,7 +76,7 @@ func (mem *Memtable) Dump() ([]KeyValue, error) {
 	sort.Slice(keys, func(i, j int) bool { return keys[i] < keys[j] })
 	sorted := make([]KeyValue, 0, len(mem.data))
 	for _, sval := range keys {
-		sorted = append(sorted, KeyValue{key: sval, value: mem.data[sval]})
+		sorted = append(sorted, KeyValue{Key: sval, Value: mem.data[sval]})
 	}
 	return sorted, nil
 }

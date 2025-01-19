@@ -7,8 +7,8 @@ func emptystring() string {
 }
 
 type KeyValue struct {
-	key   int64
-	value string
+	Key   int64
+	Value string
 }
 
 func TableDiskError(err error) {
@@ -26,10 +26,10 @@ func BinarySearch(kv []KeyValue, key int64) int64 {
 
 	for low < high {
 		mid := (low + high) / 2
-		if kv[mid].key == key {
-			return kv[mid].key
+		if kv[mid].Key == key {
+			return kv[mid].Key
 		}
-		if kv[mid].key > key {
+		if kv[mid].Key > key {
 			high = mid - 1
 		} else {
 			low = mid + 1

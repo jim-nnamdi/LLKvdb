@@ -24,9 +24,8 @@ func NewWAL(walLoc string) (*WAL, error) {
 }
 
 func (wal *WAL) Write(key int64, value string) error {
-	memsize, err := wal.file.WriteString(fmt.Sprintf("%d:%s\n", key, value))
+	_, err := wal.file.WriteString(fmt.Sprintf("%d:%s\n", key, value))
 	GenericWriteAheadLogError(err)
-	fmt.Printf("\nbytes written to WALog: '%d'\n", memsize)
 	return err
 }
 
@@ -44,7 +43,7 @@ func (wal *WAL) Replay() ([]KeyValue, error) {
 		var key int64
 		var value string
 		fmt.Sscanf(lines, "%d:%s", key, value)
-		data = append(data, KeyValue{key: key, value: value})
+		data = append(data, KeyValue{Key: key, Value: value})
 	}
 	if err = scanner.Err(); err != nil {
 		return nil, errors.New(err.Error())

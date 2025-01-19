@@ -36,3 +36,23 @@ func TestMemTableDelete(t *testing.T) {
 		t.Errorf("Expected key 1 not to exist again but it was found")
 	}
 }
+
+func TestMemTableFlushSSTable(t *testing.T) {
+	memtable := model.Newmemtable()
+	memtable.Put(34, "a")
+	memtable.Put(37, "b")
+	flushed := memtable.Flush()
+	expected := []model.KeyValue{
+		{Key: 34, Value: "a"},
+		{Key: 37, Value: "b"},
+	}
+	if len(flushed) != len(expected) {
+		t.Fatalf("expected flushed len of '%d' got '%d'", len(expected), len(flushed))
+	}
+
+	for i, kv := range flushed {
+		if kv != expected[i] {
+			t.Errorf("Expected flushed['%d'] = %+v got %+v", i, expected[i], kv)
+		}
+	}
+}
