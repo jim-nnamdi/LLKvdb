@@ -66,7 +66,7 @@ func (Fsys *Filesys) Read(key int64) (string, bool) {
 	return emptystring(), false
 }
 
-func (Fsys *Filesys) ReadKeyRange(startkey int64, endkey int64) {
+func (Fsys *Filesys) ReadKeyRange(startkey int64, endkey int64) (bool, error) {
 	Fsys.mutex_t.Lock()
 	defer Fsys.mutex_t.Unlock()
 	result := make(map[int64]string)
@@ -75,6 +75,7 @@ func (Fsys *Filesys) ReadKeyRange(startkey int64, endkey int64) {
 			result[key] = val
 		}
 	}
+	return true, nil
 }
 
 func (Fsys *Filesys) BatchPut(batch []map[int64]string) {

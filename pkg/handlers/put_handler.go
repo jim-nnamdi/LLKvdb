@@ -27,5 +27,7 @@ func (handler *putHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	)
 	keyval, _ := strconv.ParseInt(key, 10, 64)
 	handler.Fsys.Put(int64(keyval), val)
-	json.NewEncoder(w).Encode(DataPersisted)
+	response := map[string]interface{}{}
+	response["message"] = DataPersisted
+	json.NewEncoder(w).Encode(response)
 }

@@ -24,6 +24,7 @@ func (handler *readHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var (
 		key             = r.FormValue("key")
 		DataUnavailable = "Associated Data for key could not be found on disk!"
+		DataAvailable   = "Data successfully read"
 	)
 	keyval, _ := strconv.ParseInt(key, 10, 64)
 	vals, ok := handler.Fsys.Read(int64(keyval))
@@ -31,5 +32,8 @@ func (handler *readHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("err", DataUnavailable)
 		json.NewEncoder(w).Encode(DataUnavailable)
 	}
-	json.NewEncoder(w).Encode(vals)
+	response := map[string]interface{}{}
+	response["message"] = DataAvailable
+	response["value"] = vals
+	json.NewEncoder(w).Encode(response)
 }
