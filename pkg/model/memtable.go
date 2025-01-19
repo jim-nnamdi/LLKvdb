@@ -14,7 +14,7 @@ func Newmemtable() *Memtable {
 	return &Memtable{data: make(map[int64]string)}
 }
 
-func (mem *Memtable) Write(key int64, value string) {
+func (mem *Memtable) Put(key int64, value string) {
 	mem.mutex.Lock()
 	defer mem.mutex.Unlock()
 	mem.data[key] = value

@@ -17,11 +17,11 @@ type WAL struct {
 	file *os.File
 }
 
-func NewWAL(walLoc string) *WAL {
+func NewWAL(walLoc string) (*WAL, error) {
 	file, err := os.OpenFile(walLoc, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 	WriteAheadLogError(err)
 	defer file.Close()
-	return &WAL{file: file}
+	return &WAL{file: file}, nil
 }
 
 func (wal *WAL) Write(key int64, value string) error {
