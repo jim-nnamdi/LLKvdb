@@ -115,7 +115,7 @@ make clean
 
 ## **Endpoints**
 ```shell
-
+# You can see the WriteAheadLog stored in wal.txt (which is created automatically too)
 # After running the binary, you can access the endpoints via postman or insomnia too
 # remember how to change the port on the **Notes** section
 
@@ -135,7 +135,7 @@ curl --location --request GET 'http://localhost:7009/readkeyrange' \
 # BatchPut
 curl --location 'http://localhost:7009/batchput' \
 --form 'keys="10,11,12,13,14"' \
---form 'values="\"moniepoint\",\"finance\",\"cbn\",\"samuel\",\"algorithms\""'
+--form 'values="moniepoint, finance,algorithms,math,assembly"'
 ```
 
 ## **Notes**  
