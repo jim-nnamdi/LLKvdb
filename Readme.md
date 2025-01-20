@@ -154,3 +154,5 @@ go build -o llkvdb ./cmd/kvs
 # See running Process
 ps aux | grep llkvdb
 ```
+## **Memory Tweak**
+Inside ```runner/start.go``` you can tweak the memory on line 16. it is set currently to 1024, but let's assume we want a smaller amount of memory just to be able to see that the in-memory data structure (memtable) gets filled up quickly and the sstables created. 5/(1024*1024) can give us 5 bytes of data..
