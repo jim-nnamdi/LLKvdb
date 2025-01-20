@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -31,23 +32,24 @@ func (handler *batchPutHandler) ServeHTTP(w http.ResponseWriter, r *http.Request
 		return
 	}
 	keyList := strings.Split(keys, ",")
+	fmt.Println("keyList", keyList)
 	valList := strings.Split(vals, ",")
+	fmt.Println("valList", valList)
 	if len(keyList) != len(valList) {
 		http.Error(w, "keys and values must be of the same length", http.StatusBadRequest)
 		return
 	}
-	data := make([]map[int64]string, 0, len(keyList))
-	for i, key := range keyList {
-		keyval, err := strconv.ParseInt(strings.TrimSpace(key), 10, 64)
+
+	ikeys := make([]int64, len(keyList))
+	for i, v := range keyList {
+		val, err := strconv.ParseInt(v, 10, 64)
 		if err != nil {
-			http.Error(w, "error:invalid key format, must be an integer", http.StatusBadRequest)
+			http.Error(w, "invalid conversion from string to int64", http.StatusBadRequest)
 			return
 		}
-		data = append(data, map[int64]string{
-			keyval: strings.TrimSpace(valList[i]),
-		})
+		ikeys[i] = val
 	}
-	handler.Fsys.BatchPut(data)
+	handler.Fsys.BatchPut(ikeys, valList)
 	response := map[string]interface{}{}
 	response["message"] = DataPersisted
 	json.NewEncoder(w).Encode(response)

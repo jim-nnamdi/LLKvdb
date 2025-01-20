@@ -57,11 +57,13 @@ func (Fsys *Filesys) Read(key int64) (string, bool) {
 	Fsys.mutex_t.RLock()
 	defer Fsys.mutex_t.RUnlock()
 	if val, exists := Fsys.memtable.Read(key); exists {
+		fmt.Println("val", val)
 		return val, true
 	}
 	for i := len(Fsys.sstables) - 1; i >= 0; i-- {
 		block, _ := Fsys.sstables[i].Get(key)
 		if val, exists := block[key]; exists {
+			fmt.Println("val", val)
 			return val, true
 		}
 	}
@@ -73,6 +75,7 @@ func (Fsys *Filesys) Read(key int64) (string, bool) {
 
 	for _, kv := range extra {
 		if key == kv.Key {
+			fmt.Println("val", kv.Value)
 			return kv.Value, true
 		}
 	}
@@ -109,21 +112,26 @@ func (Fsys *Filesys) ReadKeyRange(startkey int64, endkey int64) ([]KeyValue, err
 	return results, nil
 }
 
-func (Fsys *Filesys) BatchPut(batch []map[int64]string) {
+func (Fsys *Filesys) BatchPut(keys []int64, vals []string) {
 	Fsys.mutex_t.Lock()
 	defer Fsys.mutex_t.Unlock()
-	for i := 0; i < len(batch); i++ {
-		for keys, vals := range batch {
-			if wal := Fsys.aheadLog.Write(int64(keys), vals[int64(keys)]); wal != nil {
-				fmt.Println()
-			}
-			Fsys.memtable.Put(int64(keys), vals[int64(keys)])
-			if len(Fsys.memtable.data) > Fsys.maxmemsize {
-				memflush := Fsys.memtable.Flush()
-				sstable := Newsstable(fmt.Sprintf("sstable-%d", keys))
-				_ = sstable.Write(memflush)
-				Fsys.sstables = append(Fsys.sstables, sstable)
-			}
+	if len(keys) != len(vals) {
+		fmt.Println("Length of keys and values are different. they should be the same")
+		return
+	}
+	for i := 0; i < len(keys); i++ {
+		keys := keys[i]
+		vals := vals[i]
+		if wal := Fsys.aheadLog.Write(keys, vals); wal != nil {
+			fmt.Println("error writing batch data to disk")
+			return
+		}
+		Fsys.memtable.Put(keys, vals)
+		if len(Fsys.memtable.data) > Fsys.maxmemsize {
+			flushed := Fsys.memtable.Flush()
+			sstable := Newsstable(fmt.Sprintf("sstable-%d", keys))
+			_ = sstable.Write(flushed)
+			Fsys.sstables = append(Fsys.sstables, sstable)
 		}
 	}
 }

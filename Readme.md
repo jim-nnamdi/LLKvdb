@@ -119,11 +119,23 @@ make clean
 # After running the binary, you can access the endpoints via postman or insomnia too
 # remember how to change the port on the **Notes** section
 
+# Put
 curl --location 'http://localhost:7009/put' \
 --form 'key="9"' \
 --form 'value="Samuel"'
 
+# Read
 curl --location 'http://localhost:7009/read/1'
+
+# ReadKeyRange
+curl --location --request GET 'http://localhost:7009/readkeyrange' \
+--form 'startkey="1"' \
+--form 'endkey="7"'
+
+# BatchPut
+curl --location 'http://localhost:7009/batchput' \
+--form 'keys="10,11,12,13,14"' \
+--form 'values="\"moniepoint\",\"finance\",\"cbn\",\"samuel\",\"algorithms\""'
 ```
 
 ## **Notes**  
