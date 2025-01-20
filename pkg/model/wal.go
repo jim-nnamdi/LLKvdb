@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strconv"
+	"strings"
 )
 
 var (
@@ -49,6 +51,45 @@ func (wal *WAL) Replay() ([]KeyValue, error) {
 		return nil, errors.New(err.Error())
 	}
 	return data, nil
+}
+
+func (wal *WAL) Delete(key int64) (bool, int64, error) {
+	fsk, err := os.Open(wal.file.Name())
+	if err != nil {
+		return false, -1, err
+	}
+	defer fsk.Close()
+	var lines []string
+	scanner := bufio.NewScanner(fsk)
+	for scanner.Scan() {
+		line := scanner.Text()
+		skey := strconv.FormatInt(key, 10)
+		if strings.HasPrefix(line, skey+":") {
+			continue
+		}
+		lines = append(lines, line)
+	}
+	if err := scanner.Err(); err != nil {
+		return false, -1, err
+	}
+
+	ofile, err := os.OpenFile(wal.file.Name(), os.O_WRONLY|os.O_TRUNC, 0644)
+	if err != nil {
+		return false, -1, err
+	}
+	defer ofile.Close()
+	writer := bufio.NewWriter(ofile)
+	for _, line := range lines {
+		fmt.Println(line)
+		_, err := writer.WriteString(line + "\n")
+		if err != nil {
+			return false, -1, err
+		}
+	}
+	fmt.Println(lines)
+	writer.Flush()
+	fmt.Printf("key '%d' removed successfully\n", key)
+	return true, key, nil
 }
 
 func (wal *WAL) Walclose() error {

@@ -136,6 +136,10 @@ curl --location --request GET 'http://localhost:7009/readkeyrange' \
 curl --location 'http://localhost:7009/batchput' \
 --form 'keys="10,11,12,13,14"' \
 --form 'values="moniepoint, finance,algorithms,math,assembly"'
+
+# Delete
+curl --location 'http://localhost:7009/delete' \
+--form 'key="14"'
 ```
 
 ## **Notes**  

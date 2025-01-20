@@ -150,5 +150,6 @@ func (Fsys *Filesys) Recover() {
 }
 
 func (Fsys *Filesys) Delete(key int64) {
+	Fsys.aheadLog.Delete(key)
 	Fsys.memtable.Delete(key)
 }
