@@ -53,10 +53,10 @@ func (wal *WAL) Replay() ([]KeyValue, error) {
 	return data, nil
 }
 
-func (wal *WAL) Delete(key int64) (bool, int64, error) {
+func (wal *WAL) Delete(key int64) (bool, error) {
 	fsk, err := os.Open(wal.file.Name())
 	if err != nil {
-		return false, -1, err
+		return false, err
 	}
 	defer fsk.Close()
 	var lines []string
@@ -70,12 +70,12 @@ func (wal *WAL) Delete(key int64) (bool, int64, error) {
 		lines = append(lines, line)
 	}
 	if err := scanner.Err(); err != nil {
-		return false, -1, err
+		return false, err
 	}
 
 	ofile, err := os.OpenFile(wal.file.Name(), os.O_WRONLY|os.O_TRUNC, 0644)
 	if err != nil {
-		return false, -1, err
+		return false, err
 	}
 	defer ofile.Close()
 	writer := bufio.NewWriter(ofile)
@@ -83,13 +83,34 @@ func (wal *WAL) Delete(key int64) (bool, int64, error) {
 		fmt.Println(line)
 		_, err := writer.WriteString(line + "\n")
 		if err != nil {
-			return false, -1, err
+			return false, err
 		}
 	}
 	fmt.Println(lines)
 	writer.Flush()
 	fmt.Printf("key '%d' removed successfully\n", key)
-	return true, key, nil
+	return true, nil
+}
+
+func (wal *WAL) WALDump(key int64) (string, error) {
+	walf, err := os.Open(wal.file.Name())
+	if err != nil {
+		fmt.Println(err)
+		return emptystring(), err
+	}
+	defer walf.Close()
+	scanner := bufio.NewScanner(walf)
+	for scanner.Scan() {
+		line := scanner.Text()
+		skey := strconv.FormatInt(key, 10)
+		if strings.HasPrefix(line, skey+":") {
+			parts := strings.SplitN(line, ":", 2)
+			if len(parts) == 2 {
+				return parts[1], nil
+			}
+		}
+	}
+	return emptystring(), errors.New("cannot find value")
 }
 
 func (wal *WAL) Walclose() error {
