@@ -153,3 +153,20 @@ func (Fsys *Filesys) Delete(key int64) {
 	Fsys.aheadLog.Delete(key)
 	Fsys.memtable.Delete(key)
 }
+
+func (Fsys *Filesys) Compaction(sst *SSTable) {
+	/*
+		when multiple tables are created for the sstables
+		which happens when the memtable flushes info out
+		because it has reached a certain memory threshold
+		which would of course be declared by the system ..
+		[Dynamic allocation] [in this case am statically allocating memory]
+		we would need to merge multiple sstables as one to minimize amount
+		of sstable-(N) files created
+
+		--- current state of my program [85 % Efficiency]
+		WAL -> memtable [ 4 / 1024 * 1024] -> Flush -> sstable-0
+		WAL -> memtable [ 4 / 1024 * 1024] -> Flush -> sstable-1
+		WAL -> memtable [ N / 1024 * 1024] -> Flush-N -> sstable-N
+	*/
+}
