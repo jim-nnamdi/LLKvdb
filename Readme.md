@@ -26,7 +26,7 @@ LLKVdb is an acronym for low latency key value database. Filesystems are major c
 | 📝 **In-Mem Disk Memtable**   | Holds writes data request from server      |  ✅ |  
 | ⚙️ **Sorted Tables**   | Memtables Flush on threshold limit to disk     |  ✅ |  
 | 🚀 **Data Recovery**   | Replay mechanism done on WAL     |  ✅ |  
-| 📮 **Compaction for SSTables**   | Merge multiple sstables for Memory optimization     |  🔺 |  
+| 📮 **Compaction for SSTables**   | Merge multiple sstables for Memory optimization     |  ✅ |  
 | 📊 **Data Replication**   | Data is split inside sstables and also in WAL     |  ✅ |  
 | 🌐 **Network Availability**   | Public endpoints exposed for end users     |  ✅ |  
 
