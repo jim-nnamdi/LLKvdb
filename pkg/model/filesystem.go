@@ -4,13 +4,15 @@ import (
 	"fmt"
 	"sort"
 	"sync"
+	"time"
 )
 
 var (
-	ErrWALWrite      = "could not write to WAL file"
-	ErrWALBatchWrite = "could not write Batch Data to WAL file"
-	ErrMTBatchWrite  = "could not write Batch Data to memtable file"
-	ErrSSTBatchWrite = "could not write Batch Data to sstable file"
+	ErrWALWrite          = "could not write to WAL file"
+	ErrWALBatchWrite     = "could not write Batch Data to WAL file"
+	ErrMTBatchWrite      = "could not write Batch Data to memtable file"
+	ErrSSTBatchWrite     = "could not write Batch Data to sstable file"
+	ErrCompactionSSTable = "Error during compaction process"
 )
 
 type Filesys struct {
@@ -154,7 +156,7 @@ func (Fsys *Filesys) Delete(key int64) {
 	Fsys.memtable.Delete(key)
 }
 
-func (Fsys *Filesys) Compaction(sst *SSTable) {
+func (Fsys *Filesys) Compaction(sst *SSTable) error {
 	/*
 		when multiple tables are created for the sstables
 		which happens when the memtable flushes info out
@@ -169,4 +171,30 @@ func (Fsys *Filesys) Compaction(sst *SSTable) {
 		WAL -> memtable [ 4 / 1024 * 1024] -> Flush -> sstable-1
 		WAL -> memtable [ N / 1024 * 1024] -> Flush-N -> sstable-N
 	*/
+	var all []KeyValue
+	for _, sstable := range Fsys.sstables {
+		data, err := sstable.Load()
+		if err != nil {
+			fmt.Println(err)
+			return err
+		}
+		all = append(all, data...)
+	}
+	sort.Slice(all, func(i, j int) bool { return all[i].Key < all[j].Key })
+	merge := make([]KeyValue, 0)
+	seenk := make(map[int64]bool)
+	for i := len(all) - 1; i > 0; i-- {
+		if !seenk[all[i].Key] {
+			merge = append(merge, all[i])
+			seenk[all[i].Key] = true
+		}
+	}
+	sort.Slice(merge, func(i, j int) bool { return merge[i].Key < merge[j].Key })
+	newsspath := Newsstable(fmt.Sprintf("sstable-compact-%d", time.Now().UnixNano()))
+	if err := newsspath.Write(merge); err != nil {
+		fmt.Println(ErrCompactionSSTable)
+		return err
+	}
+	Fsys.sstables = []*SSTable{newsspath}
+	return nil
 }
