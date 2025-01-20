@@ -12,7 +12,7 @@ func StartCommand() *cli.Command {
 
 	cmd := &cli.Command{
 		Name:  "start",
-		Usage: "starts the server",
+		Usage: "starts the LLKVdb server",
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:        "listen-addr",
