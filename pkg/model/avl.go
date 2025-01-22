@@ -24,13 +24,20 @@ func (Node *AVLNode) max(a uint, b uint) uint {
 	}
 }
 
+func (Node *AVLNode) height(NodeHeight uint) uint {
+	if Node.Height == 0 {
+		return 0
+	}
+	return Node.Height
+}
+
 func (Node *AVLNode) RotateRight(currentLeft *AVLNode) *AVLNode {
 	currentRight := currentLeft.Left
 	Lookupval := currentRight.Right
 	currentRight.Right = currentLeft
 	currentLeft.Left = Lookupval
-	currentLeft.Height = Node.max(currentLeft.Height, currentRight.Height) + 1
-	currentRight.Height = Node.max(currentLeft.Height, currentRight.Height) + 1
+	currentLeft.Height = Node.max(Node.height(currentLeft.Height), Node.height(currentRight.Height)) + 1
+	currentRight.Height = Node.max(Node.height(currentLeft.Height), Node.height(currentRight.Height)) + 1
 	return currentRight
 }
 
@@ -39,7 +46,7 @@ func (Node *AVLNode) RotateLeft(currentRight *AVLNode) *AVLNode {
 	Lookupval := currentLeft.Right
 	currentLeft.Left = currentRight
 	currentRight.Right = Lookupval
-	currentLeft.Height = Node.max(currentLeft.Height, currentRight.Height) + 1
-	currentRight.Height = Node.max(currentLeft.Height, currentRight.Height) + 1
+	currentLeft.Height = Node.max(Node.height(currentLeft.Height), Node.height(currentRight.Height)) + 1
+	currentRight.Height = Node.max(Node.height(currentLeft.Height), Node.height(currentRight.Height)) + 1
 	return currentLeft
 }
