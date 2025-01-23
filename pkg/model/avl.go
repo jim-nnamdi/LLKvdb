@@ -1,52 +1,138 @@
 package model
 
 type AVLNode struct {
-	Key    int
+	Key    int64
+	Value  string
+	Height int
 	Left   *AVLNode
 	Right  *AVLNode
-	Height uint
 }
 
-func NewAVLTree() *AVLNode {
-	return &AVLNode{
-		Key:    0,
-		Left:   nil,
-		Right:  nil,
-		Height: 0,
+type AVLTree struct {
+	Root *AVLNode
+}
+
+func (tree *AVLTree) Insert(key int64, value string) {
+	tree.Root = insertNode(tree.Root, key, value)
+}
+
+func insertNode(node *AVLNode, key int64, value string) *AVLNode {
+	if node == nil {
+		return &AVLNode{Key: key, Value: value, Height: 1}
 	}
-}
-
-func (Node *AVLNode) max(a uint, b uint) uint {
-	if a > b {
-		return a
+	if key < node.Key {
+		node.Left = insertNode(node.Left, key, value)
+	} else if key > node.Key {
+		node.Right = insertNode(node.Right, key, value)
 	} else {
-		return b
+		node.Value = value
+		return node
 	}
+	return balance(node)
 }
 
-func (Node *AVLNode) height(NodeHeight uint) uint {
-	if Node.Height == 0 {
+func (tree *AVLTree) Delete(key int64) {
+	tree.Root = deleteNode(tree.Root, key)
+}
+
+func deleteNode(node *AVLNode, key int64) *AVLNode {
+	if node == nil {
+		return nil
+	}
+	if key < node.Key {
+		node.Left = deleteNode(node.Left, key)
+	} else if key > node.Key {
+		node.Right = deleteNode(node.Right, key)
+	} else {
+		if node.Left == nil {
+			return node.Right
+		} else if node.Right == nil {
+			return node.Left
+		}
+		minLargerNode := findMin(node.Right)
+		node.Key, node.Value = minLargerNode.Key, minLargerNode.Value
+		node.Right = deleteNode(node.Right, minLargerNode.Key)
+	}
+	return balance(node)
+}
+
+func findMin(node *AVLNode) *AVLNode {
+	for node.Left != nil {
+		node = node.Left
+	}
+	return node
+}
+
+func (tree *AVLTree) Search(key int64) (string, bool) {
+	node := searchNode(tree.Root, key)
+	if node == nil {
+		return "", false
+	}
+	return node.Value, true
+}
+
+func searchNode(node *AVLNode, key int64) *AVLNode {
+	if node == nil || node.Key == key {
+		return node
+	}
+	if key < node.Key {
+		return searchNode(node.Left, key)
+	}
+	return searchNode(node.Right, key)
+}
+
+func balance(node *AVLNode) *AVLNode {
+	updateHeight(node)
+	balanceFactor := height(node.Left) - height(node.Right)
+	if balanceFactor > 1 {
+		if height(node.Left.Left) >= height(node.Left.Right) {
+			return rotateRight(node)
+		}
+		node.Left = rotateLeft(node.Left)
+		return rotateRight(node)
+	}
+	if balanceFactor < -1 {
+		if height(node.Right.Right) >= height(node.Right.Left) {
+			return rotateLeft(node)
+		}
+		node.Right = rotateRight(node.Right)
+		return rotateLeft(node)
+	}
+	return node
+}
+
+func height(node *AVLNode) int {
+	if node == nil {
 		return 0
 	}
-	return Node.Height
+	return node.Height
 }
 
-func (Node *AVLNode) RotateRight(currentLeft *AVLNode) *AVLNode {
-	currentRight := currentLeft.Left
-	Lookupval := currentRight.Right
-	currentRight.Right = currentLeft
-	currentLeft.Left = Lookupval
-	currentLeft.Height = Node.max(Node.height(currentLeft.Height), Node.height(currentRight.Height)) + 1
-	currentRight.Height = Node.max(Node.height(currentLeft.Height), Node.height(currentRight.Height)) + 1
-	return currentRight
+func updateHeight(node *AVLNode) {
+	node.Height = 1 + max(height(node.Left), height(node.Right))
 }
 
-func (Node *AVLNode) RotateLeft(currentRight *AVLNode) *AVLNode {
-	currentLeft := currentRight.Left
-	Lookupval := currentLeft.Right
-	currentLeft.Left = currentRight
-	currentRight.Right = Lookupval
-	currentLeft.Height = Node.max(Node.height(currentLeft.Height), Node.height(currentRight.Height)) + 1
-	currentRight.Height = Node.max(Node.height(currentLeft.Height), Node.height(currentRight.Height)) + 1
-	return currentLeft
+func max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}
+
+func rotateLeft(node *AVLNode) *AVLNode {
+	right := node.Right
+	node.Right = right.Left
+	right.Left = node
+	updateHeight(node)
+	updateHeight(right)
+	return right
+}
+
+func rotateRight(node *AVLNode) *AVLNode {
+	left := node.Left
+	node.Left = left.Right
+	left.Right = node
+	updateHeight(node)
+	updateHeight(left)
+	return left
 }
