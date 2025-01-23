@@ -1,5 +1,7 @@
 package model
 
+import "sync"
+
 type AVLNode struct {
 	Key    int64
 	Value  string
@@ -9,11 +11,28 @@ type AVLNode struct {
 }
 
 type AVLTree struct {
-	Root *AVLNode
+	Root  *AVLNode
+	Size  int
+	mutex sync.RWMutex
+}
+
+func NewAVLTree() *AVLTree {
+	return &AVLTree{
+		Root: nil,
+		Size: 0,
+	}
+}
+
+func calculateSize(node *AVLNode) int {
+	if node == nil {
+		return 0
+	}
+	return 1 + calculateSize(node.Left) + calculateSize(node.Right)
 }
 
 func (tree *AVLTree) Insert(key int64, value string) {
 	tree.Root = insertNode(tree.Root, key, value)
+	tree.Size++
 }
 
 func insertNode(node *AVLNode, key int64, value string) *AVLNode {
@@ -33,6 +52,7 @@ func insertNode(node *AVLNode, key int64, value string) *AVLNode {
 
 func (tree *AVLTree) Delete(key int64) {
 	tree.Root = deleteNode(tree.Root, key)
+	tree.Size--
 }
 
 func deleteNode(node *AVLNode, key int64) *AVLNode {
@@ -135,4 +155,59 @@ func rotateRight(node *AVLNode) *AVLNode {
 	updateHeight(node)
 	updateHeight(left)
 	return left
+}
+
+func (tree *AVLTree) InOrderTraversal() []KeyValue {
+	result := []KeyValue{}
+	inOrder(tree.Root, &result)
+	return result
+}
+
+func inOrder(node *AVLNode, result *[]KeyValue) {
+	if node == nil {
+		return
+	}
+	inOrder(node.Left, result)
+	*result = append(*result, KeyValue{Key: node.Key, Value: node.Value})
+	inOrder(node.Right, result)
+}
+
+func (tree *AVLTree) Flush() []KeyValue {
+	tree.mutex.Lock()
+	defer tree.mutex.Unlock()
+	sortedData := tree.InOrderTraversal()
+	tree.Root = nil
+	return sortedData
+}
+
+func (tree *AVLTree) ReadKeyRange(low, high int64) []KeyValue {
+	tree.mutex.Lock() // Lock for thread safety
+	defer tree.mutex.Unlock()
+
+	result := []KeyValue{}
+	readKeyRange(tree.Root, low, high, &result)
+	return result
+}
+
+func readKeyRange(node *AVLNode, low, high int64, result *[]KeyValue) {
+	if node == nil {
+		return
+	}
+
+	// If the current node's key is greater than or equal to `low`,
+	// explore the left subtree (keys < current node's key).
+	if node.Key >= low {
+		readKeyRange(node.Left, low, high, result)
+	}
+
+	// If the current node's key is within the range, include it in the result.
+	if node.Key >= low && node.Key <= high {
+		*result = append(*result, KeyValue{Key: node.Key, Value: node.Value})
+	}
+
+	// If the current node's key is less than or equal to `high`,
+	// explore the right subtree (keys > current node's key).
+	if node.Key <= high {
+		readKeyRange(node.Right, low, high, result)
+	}
 }

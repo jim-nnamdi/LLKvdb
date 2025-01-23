@@ -16,7 +16,7 @@ var (
 )
 
 type Filesys struct {
-	memtable   *Memtable
+	memtable   *AVLTree
 	sstables   []*SSTable
 	aheadLog   *WAL
 	mutex_t    sync.RWMutex
@@ -30,7 +30,7 @@ func NewFilesys(walLoc string, maxsize int) *Filesys {
 		fmt.Printf("%s\n", "Write ahead Log File error")
 	}
 	return &Filesys{
-		memtable:   Newmemtable(),
+		memtable:   NewAVLTree(),
 		sstables:   []*SSTable{},
 		aheadLog:   wal,
 		maxmemsize: maxsize,
@@ -45,9 +45,9 @@ func (Fsys *Filesys) Put(key int64, value string) {
 		fmt.Println(walerror)
 		fmt.Printf("%s\n", ErrWALWrite)
 	}
-	Fsys.memtable.Put(key, value)
-	Fsys.memtable.Dump()
-	if len(Fsys.memtable.data) > Fsys.maxmemsize {
+	Fsys.memtable.Insert(key, value)
+	Fsys.memtable.InOrderTraversal()
+	if Fsys.memtable.Size > Fsys.maxmemsize {
 		memflush := Fsys.memtable.Flush()
 		sstable_t := Newsstable(fmt.Sprintf("sstable-%d", len(Fsys.sstables)))
 		_ = sstable_t.Write(memflush)
@@ -58,7 +58,7 @@ func (Fsys *Filesys) Put(key int64, value string) {
 func (Fsys *Filesys) Read(key int64) (string, bool) {
 	Fsys.mutex_t.RLock()
 	defer Fsys.mutex_t.RUnlock()
-	if val, exists := Fsys.memtable.Read(key); exists {
+	if val, exists := Fsys.memtable.Search(key); exists {
 		fmt.Println("val", val)
 		return val, true
 	}
@@ -69,12 +69,7 @@ func (Fsys *Filesys) Read(key int64) (string, bool) {
 			return val, true
 		}
 	}
-	extra, err := Fsys.memtable.Dump()
-	if err != nil {
-		fmt.Println(err)
-		return emptystring(), false
-	}
-
+	extra := Fsys.memtable.InOrderTraversal()
 	for _, kv := range extra {
 		if key == kv.Key {
 			fmt.Println("val", kv.Value)
@@ -89,9 +84,9 @@ func (Fsys *Filesys) ReadKeyRange(startkey int64, endkey int64) ([]KeyValue, err
 	Fsys.mutex_t.Lock()
 	defer Fsys.mutex_t.Unlock()
 	var results []KeyValue
-	for key, val := range Fsys.memtable.data {
-		if key >= startkey && key <= endkey {
-			results = append(results, KeyValue{Key: key, Value: val})
+	for key, val := range Fsys.memtable.ReadKeyRange(startkey, endkey) {
+		if int64(key) >= startkey && int64(key) <= endkey {
+			results = append(results, val)
 		}
 	}
 
@@ -128,8 +123,8 @@ func (Fsys *Filesys) BatchPut(keys []int64, vals []string) {
 			fmt.Println("error writing batch data to disk")
 			return
 		}
-		Fsys.memtable.Put(keys, vals)
-		if len(Fsys.memtable.data) > Fsys.maxmemsize {
+		Fsys.memtable.Insert(keys, vals)
+		if Fsys.memtable.Size > Fsys.maxmemsize {
 			flushed := Fsys.memtable.Flush()
 			sstable := Newsstable(fmt.Sprintf("sstable-%d", keys))
 			_ = sstable.Write(flushed)
@@ -144,9 +139,9 @@ func (Fsys *Filesys) Recover() {
 		fmt.Println(err)
 	}
 	for _, vals := range wal {
-		Fsys.memtable.Put(vals.Key, vals.Value)
+		Fsys.memtable.Insert(vals.Key, vals.Value)
 	}
-	if len(Fsys.memtable.data) > Fsys.maxmemsize {
+	if Fsys.memtable.Size > Fsys.maxmemsize {
 		Fsys.memtable.Flush()
 	}
 }

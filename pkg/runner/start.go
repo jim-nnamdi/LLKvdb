@@ -13,7 +13,7 @@ type StartRunner struct {
 
 func (runner *StartRunner) Run(c *cli.Context) error {
 	var (
-		Fsys = model.NewFilesys("wal.txt", 1024)
+		Fsys = model.NewFilesys("wal.txt", 5)
 	)
 	server := &server.GracefulShutdownServer{
 		HTTPListenAddr:      runner.ListenAddr,
