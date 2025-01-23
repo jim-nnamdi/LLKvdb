@@ -23,13 +23,6 @@ func NewAVLTree() *AVLTree {
 	}
 }
 
-func calculateSize(node *AVLNode) int {
-	if node == nil {
-		return 0
-	}
-	return 1 + calculateSize(node.Left) + calculateSize(node.Right)
-}
-
 func (tree *AVLTree) Insert(key int64, value string) {
 	tree.Root = insertNode(tree.Root, key, value)
 	tree.Size++

@@ -2,7 +2,9 @@ package model
 
 import (
 	"fmt"
+	"os"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 )
@@ -19,6 +21,7 @@ type Filesys struct {
 	memtable   *AVLTree
 	sstables   []*SSTable
 	aheadLog   *WAL
+	compacts   *MinHeap
 	mutex_t    sync.RWMutex
 	maxmemsize int
 }
@@ -37,6 +40,40 @@ func NewFilesys(walLoc string, maxsize int) *Filesys {
 	}
 }
 
+func (Fsys *Filesys) sstableDirCount(dirname string) int {
+	files, err := os.ReadDir(dirname)
+	if err != nil {
+		fmt.Println(err)
+	}
+	count := 0
+	for _, file := range files {
+		if file.IsDir() {
+			continue
+		}
+		if strings.HasPrefix(file.Name(), "sstable-") {
+			count++
+		}
+	}
+	if count >= 5 {
+		names := make([]string, len(files))
+		for i, name := range files {
+			names[i] = name.Name()
+		}
+		// TODO: hash the value passed as compact index
+		Fsys.compacts.MergeSSTables(names, fmt.Sprintf("sstable-compact-%d", count-1))
+	}
+
+	for _, zname := range files {
+		build_files := dirname + "/" + zname.Name()
+		if strings.HasPrefix(build_files, "sstable-") {
+			if err := os.Remove(build_files); err != nil {
+				fmt.Println("error removing sstable", err)
+			}
+		}
+	}
+	return count
+}
+
 func (Fsys *Filesys) Put(key int64, value string) {
 	Fsys.mutex_t.Lock()
 	defer Fsys.mutex_t.Unlock()
@@ -45,6 +82,9 @@ func (Fsys *Filesys) Put(key int64, value string) {
 		fmt.Println(walerror)
 		fmt.Printf("%s\n", ErrWALWrite)
 	}
+	// perform compaction first before writing to AVLTree
+	sstable_c := Fsys.sstableDirCount(".")
+	fmt.Printf("sstables are %d in number\n", sstable_c+1)
 	Fsys.memtable.Insert(key, value)
 	Fsys.memtable.InOrderTraversal()
 	if Fsys.memtable.Size > Fsys.maxmemsize {
@@ -149,6 +189,12 @@ func (Fsys *Filesys) Recover() {
 func (Fsys *Filesys) Delete(key int64) {
 	Fsys.aheadLog.Delete(key)
 	Fsys.memtable.Delete(key)
+}
+
+func (Fsys *Filesys) Compact(sstables []string, ofile string) {
+	if err := Fsys.compacts.MergeSSTables(sstables, ofile); err != nil {
+		fmt.Println("compaction error", err)
+	}
 }
 
 func (Fsys *Filesys) Compaction(sst *SSTable) error {
